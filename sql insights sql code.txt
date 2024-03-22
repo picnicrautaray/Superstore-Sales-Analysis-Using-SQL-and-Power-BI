@@ -1,0 +1,233 @@
+SELECT * FROM superstore.superstore;
+
+
+-- Q1) What percentage of total orders were shipped on the same date?
+select (count(distinct order_id)/(select count(distinct order_id) as total_orders from superstore))*100 as Same_Day_Shipping_Percentage
+from superstore
+where order_date = ship_date;
+
+-- Q2) Name top 3 customers with highest total value of orders?
+
+select distinct customer_name,round(sum(sales),3) as total_value
+from superstore
+group by customer_name
+order by sum(sales) desc
+limit 3
+
+
+
+-- Q3) Find the top 5 items with the highest average sales per day?
+
+select product_id,product_name,round(avg(sales),3)as avg_sale
+from superstore
+group by product_id,product_name
+order by avg(sales) desc
+limit 5
+
+
+ -- Q4) Write a query to find the average order value for each customer, and rank the customers by their average order value? 
+ 
+ select customer_name,round(avg(sales),3) as avg_order_value,
+ dense_rank() over (order by avg(sales) desc ) as sales_rnk
+ from superstore
+ group by customer_name
+
+-- Q5) Give the name of customers who ordered highest and lowest orders from each city?
+
+
+WITH cte AS (
+    SELECT
+        City,
+        MAX(Sales) AS highest_order,
+        MIN(Sales) AS lowest_order
+    FROM
+        superstore
+    GROUP BY
+        City
+)
+SELECT
+    c.City,
+    c.highest_order,
+    h.Customer_Name AS highest_order_customer,
+    c.lowest_order,
+    l.Customer_Name AS lowest_order_customer
+FROM
+    cte c
+INNER JOIN
+    superstore h ON c.City = h.City AND c.highest_order = h.Sales
+INNER JOIN
+    superstore l ON c.City = l.City AND c.lowest_order = l.Sales
+ORDER BY
+    c.City;
+
+
+-- Q6) What is the most demanded sub-category in the west region?
+
+select sub_category,sum(sales) as total_sales
+from superstore
+where region = "west"
+group by sub_category
+order by sum(sales) desc
+limit 1
+
+-- Q7) Which order has the highest number of items? 
+
+select order_id,count(product_id) as no_of_items
+from superstore
+group by order_id
+order by count(product_id) desc
+limit 1
+
+
+-- Q8) Which order has the highest cumulative value?
+
+SELECT Order_ID, SUM(Sales) AS Cumulative_Value
+FROM superstore
+GROUP BY Order_ID
+ORDER BY Cumulative_Value DESC
+LIMIT 1;
+
+-- Q9) Which segment’s order is more likely to be shipped via first class?
+select segment,count(order_id) as orders
+from superstore
+where ship_mode = "first class"
+group by segment
+order by count(order_id) desc
+
+-- Q10) Which city is least contributing to total revenue?
+select city,sum(sales) as revenue
+from superstore
+group by city
+order by sum(sales) asc
+limit 1
+
+
+-- Q11) What is the average time for orders to get shipped after order is placed?
+
+select avg(datediff(ship_date,order_date)) as avg_ship_time
+from superstore
+
+
+/* Q12) Which segment places the highest number of orders from each state 
+                   and which segment places the largest individual orders from each state? 
+
+with cte as
+(select state,segment,count(order_id) as orders,
+rank() over (partition by state order by count(order_id) desc) as rnk
+from superstore
+group by state,segment)
+select state,segment,orders
+from cte
+where rnk = 1
+
+
+/* Q13) Find all the customers who individually ordered on 3 consecutive days 
+		where each day’s total order was more than 50 in value?*/
+        
+WITH cte AS (
+    SELECT
+        Customer_ID,
+        Customer_Name,
+        Order_ID,
+        Order_Date,
+        ROUND(SUM(sales), 3) AS order_value,
+        DATEDIFF(Order_Date, LAG(Order_Date) OVER (PARTITION BY Customer_ID ORDER BY Order_Date ASC)) AS date_diff
+    FROM
+        superstore
+    GROUP BY
+        Customer_ID,
+        Customer_Name,
+        Order_ID,
+        Order_Date
+    HAVING
+        SUM(sales) > 50
+)
+SELECT
+    Customer_ID,
+    Customer_Name
+FROM
+    cte
+WHERE
+    date_diff = 1;
+
+-- Q14) Find the maximum number of days for which total sales on each day kept rising?
+
+WITH RisingSalesDays AS (
+    SELECT 
+        Order_Date,
+        SUM(Sales) AS DailySales,
+        ROW_NUMBER() OVER (ORDER BY Order_Date) AS DayNumber
+    FROM 
+        superstore
+    GROUP BY 
+        Order_Date
+),
+ConsecutiveDays AS (
+    SELECT 
+        rs1.Order_Date AS StartDate,
+        COUNT(rs2.Order_Date) AS ConsecutiveDays
+    FROM 
+        RisingSalesDays rs1
+    JOIN 
+        RisingSalesDays rs2 ON rs1.DayNumber <= rs2.DayNumber AND rs1.DailySales <= rs2.DailySales
+    GROUP BY 
+        rs1.Order_Date
+    HAVING 
+        COUNT(rs2.Order_Date) = MAX(rs2.DayNumber - rs1.DayNumber) + 1
+)
+SELECT 
+    MAX(ConsecutiveDays) AS MaxConsecutiveDays
+FROM 
+    ConsecutiveDays;
+
+
+-- 15) Find the total number of orders placed in each country.
+select state,count(order_id) as total_orders
+from superstore 
+group by state
+order by count(order_id) desc;
+
+-- 16) Calculate the average sales amount per order for each customer segment.
+select segment,avg(sales) as avg_sale_amt
+from superstore
+group by segment
+
+-- 17) Identify the top 3 customers with the highest total sales revenue.
+ 
+ select customer_name,sum(sales) as total_sales_revenue
+ from superstore
+ group by customer_name
+ order by sum(sales) desc
+ limit 3
+ 
+ -- 18) Determine the most popular shipping mode based on the frequency of use.
+SELECT Ship_Mode, COUNT(*) AS Frequency
+FROM superstore
+GROUP BY Ship_Mode
+ORDER BY Frequency DESC
+LIMIT 1;
+
+-- 19) Calculate the total sales revenue for each year and month.
+
+select year(order_date) as year ,month(order_date) as month,sum(sales) as sales
+from superstore
+group by year(order_date),month(order_date)
+order by year,month
+
+-- 20) Identify the top-selling product in each product category.
+
+
+with cte as
+(SELECT 
+        Category,
+        Sub_Category,
+        Product_Name,
+        Sales,
+        row_number() over (partition by category order by sales desc) as rn
+    FROM superstore)
+    
+select  Category,
+        Sub_Category,
+        Product_Name,sales
+from cte
+where rn =1;
