@@ -11,10 +11,10 @@ This repository showcases the Superstore Sales Analysis project, employing Pytho
 
 ## Repository Components
 
-#### 1.Python scripts for cleaning and transforming the Excel dataset.
-#### 2.SQL dump file for importing transformed data into a SQL database.
-#### 3.SQL queries for exploratory analysis and insight extraction from sales data.
-#### 4.Power BI project file (.pbix) housing interactive reports covering sales performance, customer analysis, and product insights.
-#### The project underscores proficiency in data cleaning, SQL querying, and data visualization via Power BI. Interactive reports offer valuable insights into sales performance, customer behavior, and product analysis, empowering informed decision-making.
+#### 1. Python scripts for cleaning and transforming the Excel dataset.
+#### 2. SQL dump file for importing transformed data into a SQL database.
+#### 3. SQL queries for exploratory analysis and insight extraction from sales data.
+#### 4. Power BI project file (.pbix) housing interactive reports covering sales performance, customer analysis, and product insights.
+The project underscores proficiency in data cleaning, SQL querying, and data visualization via Power BI. Interactive reports offer valuable insights into sales performance, customer behavior, and product analysis, empowering informed decision-making.
 
 Feel free to explore, utilize provided scripts and queries, and adapt analysis techniques to your own datasets. Contributions, suggestions, and enhancements are welcomed to enrich the Superstore Sales Analysis repository.
